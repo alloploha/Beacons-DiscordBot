@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy to https://alloploha.azurewebsites.net, WebJobs, Beacons-DiscordBot
+name: Build & Deploy Beacons-DiscordBot
 
 on:
   push:
@@ -58,6 +58,8 @@ jobs:
    
   deploy-production:
     name: Deploy to Production
+    environment:
+      name: Production
     runs-on: windows-latest
     needs: build
     
@@ -65,13 +67,13 @@ jobs:
     - name: Download Artifact Beacons-DiscordBot-WebApp.zip
       uses: actions/download-artifact@v2
       with:
-        name: Beacons-DiscordBot-WebJob
-        path: .\Beacons-DiscordBot-WebJob.zip
+        name: Beacons-DiscordBot-WebApp
+        path: .\Beacons-DiscordBot-WebApp.zip
     
-#    - name: 'Deploy to Azure Web App'
-#      uses: azure/webapps-deploy@v2
-#      with:
-#        app-name: 'alloploha'
-#        slot-name: 'production'
-#        publish-profile: ${{ secrets.AzureAppService_PublishProfile_4a1a4ed29043450cb8cf65ce4edb644c }}
-#        package: '.\Beacons-DiscordBot-WebApp.zip'
+    - name: 'Deploy to Azure Web App'
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'alloploha'
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_4a1a4ed29043450cb8cf65ce4edb644c }}
+        package: '.\Beacons-DiscordBot-WebApp.zip'
