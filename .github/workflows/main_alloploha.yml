@@ -36,7 +36,7 @@ jobs:
         retention-days: 1
 
     - name: Zip files for Web Job
-      run: Compress-Archive .\_wwwroot\App_Data\jobs\Beacons-DiscordBot\* .\_artifacts\Beacons-DiscordBot-WebJob.zip
+      run: Compress-Archive .\_wwwroot\App_Data\jobs\continuous\Beacons-DiscordBot\* .\_artifacts\Beacons-DiscordBot-WebJob.zip
                 
     - name: Upload Artifact Beacons-DiscordBot-WebJob.zip
       uses: actions/upload-artifact@v2
