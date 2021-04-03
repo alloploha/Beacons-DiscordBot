@@ -16,17 +16,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-#    - name: Set up Python version
-#      uses: actions/setup-python@v1
-#      with:
-#        python-version: '3.6'
-
-#    - name: Install Python dependencies
-#      run: |
-#        python -m venv env
-#        .\env\Scripts\activate
-#        pip install -r requirements.txt
-
     - name: Create Output directory
       run: New-Item -ItemType Directory -Path .\_wwwroot\App_Data\jobs\Beacons-DiscordBot
       
@@ -34,10 +23,10 @@ jobs:
       run: New-Item -ItemType Directory -Path .\_artifacts
 
     - name: Copy selected files
-      run: Get-ChildItem .\*.py, .\*.txt | Copy-Item -Destination .\_wwwroot\App_Data\jobs\Beacons-DiscordBot\
+      run: Get-ChildItem .\*.py, .\*.txt | Copy-Item -Destination .\_wwwroot\App_Data\jobs\Beacons-DiscordBot\ -Verbose
 
     - name: Zip files for Web App
-      run: Compress-Archive .\_wwwroot\App_Data .\_artifacts\Beacons-DiscordBot-WebApp.zip
+      run: Compress-Archive .\_wwwroot\App_Data .\_artifacts\Beacons-DiscordBot-WebApp.zip -Verbose
 
     - name: Upload Artifact Beacons-DiscordBot-WebApp.zip
       uses: actions/upload-artifact@v2
@@ -47,7 +36,7 @@ jobs:
         retention-days: 1
 
     - name: Zip files for Web Job
-      run: Compress-Archive .\_wwwroot\App_Data\jobs\Beacons-DiscordBot\* .\_artifacts\Beacons-DiscordBot-WebJob.zip
+      run: Compress-Archive .\_wwwroot\App_Data\jobs\Beacons-DiscordBot\* .\_artifacts\Beacons-DiscordBot-WebJob.zip -Verbose
                 
     - name: Upload Artifact Beacons-DiscordBot-WebJob.zip
       uses: actions/upload-artifact@v2
@@ -68,7 +57,10 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: Beacons-DiscordBot-WebApp
-        path: .\Beacons-DiscordBot-WebApp.zip
+        path: .\package
+        
+    - name: List current directory
+      run: Get-ChildItem -Recurse
     
     - name: 'Deploy to Azure Web App'
       uses: azure/webapps-deploy@v2
@@ -76,4 +68,4 @@ jobs:
         app-name: 'alloploha'
         slot-name: 'production'
         publish-profile: ${{ secrets.AzureAppService_PublishProfile_4a1a4ed29043450cb8cf65ce4edb644c }}
-        package: '.\Beacons-DiscordBot-WebApp.zip'
+        package: '.\package\Beacons-DiscordBot-WebApp.zip'
