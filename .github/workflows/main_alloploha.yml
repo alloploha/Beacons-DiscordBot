@@ -16,27 +16,36 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Create Output directory
-      run: New-Item -ItemType Directory -Path .\_wwwroot\App_Data\jobs\continuous\Beacons-DiscordBot
+    - name: Create directory
+      run: New-Item -ItemType Directory -Path .\_production\App_Data\jobs\continuous\Beacons-DiscordBot
+    
+    - name: Create directory
+      run: New-Item -ItemType Directory -Path .\_staging\App_Data\jobs\continuous\Beacons-DiscordBot(Staging)
       
     - name: Create Artifacts directory
       run: New-Item -ItemType Directory -Path .\_artifacts
 
-    - name: Copy selected files
-      run: Get-ChildItem .\*.py, .\*.txt | Copy-Item -Destination .\_wwwroot\App_Data\jobs\continuous\Beacons-DiscordBot\ -Verbose
+    - name: Copy files
+      run: Get-ChildItem .\*.py, .\*.txt | Copy-Item -Destination .\_production\App_Data\jobs\continuous\Beacons-DiscordBot\ -Verbose
+      
+    - name: Copy files
+      run: Copy-Item -Path .\_production\App_Data\jobs\continuous\Beacons-DiscordBot\* -Destination .\_staging\App_Data\jobs\continuous\Beacons-DiscordBot(Staging)\ -Recurse -Verbose
 
     - name: Zip files for Web App
-      run: Compress-Archive .\_wwwroot\App_Data .\_artifacts\Beacons-DiscordBot-WebApp.zip
+      run: Compress-Archive .\_production\App_Data .\_artifacts\Beacons-DiscordBot-WebApp.zip
+    
+    - name: Zip files for Web App
+      run: Compress-Archive .\_staging\App_Data .\_artifacts\Beacons-DiscordBot-WebApp(Staging).zip
 
     - name: Upload Artifact Beacons-DiscordBot-WebApp.zip
       uses: actions/upload-artifact@v2
       with:
         name: Beacons-DiscordBot-WebApp
-        path: .\_artifacts\Beacons-DiscordBot-WebApp.zip
+        path: .\_artifacts
         retention-days: 1
 
     - name: Zip files for Web Job
-      run: Compress-Archive .\_wwwroot\App_Data\jobs\continuous\Beacons-DiscordBot\* .\_artifacts\Beacons-DiscordBot-WebJob.zip
+      run: Compress-Archive .\_production\App_Data\jobs\continuous\Beacons-DiscordBot\* .\_artifacts\Beacons-DiscordBot-WebJob.zip
                 
     - name: Upload Artifact Beacons-DiscordBot-WebJob.zip
       uses: actions/upload-artifact@v2
@@ -44,23 +53,46 @@ jobs:
         name: Beacons-DiscordBot-WebJob
         path: .\_artifacts\Beacons-DiscordBot-WebJob.zip
         retention-days: 1
-   
-  deploy-production:
-    name: Deploy to Production
+  
+  deploy-staging:
+    name: Deploy to Staging
     environment:
-      name: Production
+      name: Staging
+      url: https://discord.com/oauth2/authorize?client_id=827762347112267778&scope=bot&permissions=150592
     runs-on: windows-latest
     needs: build
-    
+  
     steps:
-    - name: Download Artifact Beacons-DiscordBot-WebApp.zip
+    - name: Download Artifact Beacons-DiscordBot-WebApp
       uses: actions/download-artifact@v2
       with:
         name: Beacons-DiscordBot-WebApp
         path: .\package
         
-    - name: List current directory
-      run: Get-ChildItem -Recurse
+    - name: 'Deploy to Azure Web App'
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'alloploha'
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_4a1a4ed29043450cb8cf65ce4edb644c }}
+        package: '.\package\Beacons-DiscordBot-WebApp(Staging).zip'
+        
+  deploy-production:
+    name: Deploy to Production
+    environment:
+      name: Production
+    runs-on: windows-latest
+    needs: deploy-staging
+    
+    steps:
+    - name: Download Artifact Beacons-DiscordBot-WebApp
+      uses: actions/download-artifact@v2
+      with:
+        name: Beacons-DiscordBot-WebApp
+        path: .\package
+        
+    #- name: List current directory
+    #  run: Get-ChildItem -Recurse
     
     - name: 'Deploy to Azure Web App'
       uses: azure/webapps-deploy@v2
