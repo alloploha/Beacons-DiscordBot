@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: windows-latest
 
     steps:
@@ -27,21 +27,47 @@ jobs:
 #        .\env\Scripts\activate
 #        pip install -r requirements.txt
 
-    - name: Create Web App directory structure
-      run: New-Item -ItemType Directory -Path .\App_Data\jobs\Beacons-DiscordBot
+    - name: Create Output directory
+      run: New-Item -ItemType Directory -Path .\_wwwroot\App_Data\jobs\Beacons-DiscordBot
+      
+    - name: Create Artifacts directory
+      run: New-Item -ItemType Directory -Path .\_artifacts
 
     - name: Copy selected files
-      run: Get-ChildItem .\*.py, .\*.txt | Copy-Item -Destination .\App_Data\jobs\Beacons-DiscordBot\
+      run: Get-ChildItem .\*.py, .\*.txt | Copy-Item -Destination .\_wwwroot\App_Data\jobs\Beacons-DiscordBot\
 
-    - name: Zip the WebJob files
-      run: Compress-Archive .\App_Data .\Beacons-DiscordBot-WebApp.zip
+    - name: Zip files for Web App
+      run: Compress-Archive .\_wwwroot\App_Data .\_artifacts\Beacons-DiscordBot-WebApp.zip
 
-    - name: 'Upload Artifact'
+    - name: Upload Artifact Beacons-DiscordBot-WebApp.zip
       uses: actions/upload-artifact@v2
       with:
         name: Beacons-DiscordBot-WebApp
-        path: .\Beacons-DiscordBot-WebApp.zip
+        path: .\_artifacts\Beacons-DiscordBot-WebApp.zip
         retention-days: 1
+
+    - name: Zip files for Web Job
+      run: Compress-Archive .\_wwwroot\App_Data\jobs\Beacons-DiscordBot\* .\_artifacts\Beacons-DiscordBot-WebJob.zip
+                
+    - name: Upload Artifact Beacons-DiscordBot-WebJob.zip
+      uses: actions/upload-artifact@v2
+      with:
+        name: Beacons-DiscordBot-WebJob
+        path: .\_artifacts\Beacons-DiscordBot-WebJob.zip
+        retention-days: 1
+   
+  deploy-production:
+    name: Deploy to Production
+    runs-on: windows-latest
+    needs: build
+    
+    steps:
+    - name: Download Artifact Beacons-DiscordBot-WebApp.zip
+      uses: actions/download-artifact@v2
+      with:
+        name: Beacons-DiscordBot-WebJob
+        path: .\Beacons-DiscordBot-WebJob.zip
+    
 #    - name: 'Deploy to Azure Web App'
 #      uses: azure/webapps-deploy@v2
 #      with:
