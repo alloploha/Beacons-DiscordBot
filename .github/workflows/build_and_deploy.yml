@@ -1,0 +1,85 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+
+name: Build & Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Create Build Staging directory
+      run: New-Item -ItemType Directory -Path '.\_wwwroot\App_Data\jobs\continuous\Beacons-DiscordBot'
+      
+    - name: Copy files to Build Staging
+      run: Get-ChildItem .\*.py, .\*.txt | Copy-Item -Destination '.\_wwwroot\App_Data\jobs\continuous\Beacons-DiscordBot\' -Verbose
+
+    - name: Create Build Output directory
+      run: New-Item -ItemType Directory -Path '.\_artifacts'
+      
+    - name: Zip files in Build Staging
+      run: Compress-Archive .\_wwwroot\App_Data '.\_artifacts\Beacons-DiscordBot-WebJob.zip'
+
+    - name: Upload Artifact Beacons-DiscordBot-WebJob.zip
+      uses: actions/upload-artifact@v2
+      with:
+        name: Beacons-DiscordBot-WebJob
+        path: '.\_artifacts\Beacons-DiscordBot-WebJob.zip'
+        retention-days: 1
+  
+  deploy-staging:
+    name: Deploy to Staging
+    environment:
+      name: Staging
+      url: https://discord.com/oauth2/authorize?client_id=827762347112267778&scope=bot&permissions=150592
+    runs-on: windows-latest
+    needs: build
+  
+    steps:
+    - name: Download Beacons-DiscordBot-WebJob
+      uses: actions/download-artifact@v2
+      with:
+        name: Beacons-DiscordBot-WebJob
+        path: '.\package'
+        
+    - name: 'Deploy to Azure Web App'
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'alloploha'
+        slot-name: 'staging'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_4a1a4ed29043450cb8cf65ce4edb644c_STAGING_SLOT }}
+        package: '.\package\Beacons-DiscordBot-WebJob.zip'
+        
+  deploy-production:
+    name: Deploy to Production
+    environment:
+      name: Production
+      url: https://discord.com/oauth2/authorize?client_id=826951404161335356&scope=bot&permissions=134208
+    runs-on: windows-latest
+    needs: deploy-staging
+    
+    steps:
+    - name: Download Artifact Beacons-DiscordBot-WebApp
+      uses: actions/download-artifact@v2
+      with:
+        name: Beacons-DiscordBot-WebJob
+        path: '.\package'
+    
+    - name: 'Deploy to Azure Web App'
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'alloploha'
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_4a1a4ed29043450cb8cf65ce4edb644c }}
+        package: '.\package\Beacons-DiscordBot-WebJob.zip'
