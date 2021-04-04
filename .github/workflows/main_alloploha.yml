@@ -29,7 +29,7 @@ jobs:
       run: New-Item -ItemType Directory -Path '.\_artifacts'
       
     - name: Zip files in Build Staging
-      run: Compress-Archive .\_production\App_Data '.\_artifacts\Beacons-DiscordBot-WebJob.zip'
+      run: Compress-Archive .\_wwwroot\App_Data '.\_artifacts\Beacons-DiscordBot-WebJob.zip'
 
     - name: Upload Artifact Beacons-DiscordBot-WebJob.zip
       uses: actions/upload-artifact@v2
