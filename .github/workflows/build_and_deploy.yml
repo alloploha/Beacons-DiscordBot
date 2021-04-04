@@ -2,7 +2,7 @@
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
 
-name: Build & Deploy Beacons-DiscordBot
+name: Build & Deploy
 
 on:
   push:
@@ -65,6 +65,7 @@ jobs:
     name: Deploy to Production
     environment:
       name: Production
+      url: https://discord.com/oauth2/authorize?client_id=826951404161335356&scope=bot&permissions=134208
     runs-on: windows-latest
     needs: deploy-staging
     
@@ -72,11 +73,8 @@ jobs:
     - name: Download Artifact Beacons-DiscordBot-WebApp
       uses: actions/download-artifact@v2
       with:
-        name: Beacons-DiscordBot-WebApp
+        name: Beacons-DiscordBot-WebJob
         path: '.\package'
-        
-    #- name: List current directory
-    #  run: Get-ChildItem -Recurse
     
     - name: 'Deploy to Azure Web App'
       uses: azure/webapps-deploy@v2
