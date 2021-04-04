@@ -11,6 +11,11 @@ from tabulate import tabulate
 load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 BOT_PREFIX = os.getenv('BOT_PREFIX')
+DATABASE_DIRECTORY_PATH = os.getenv('DATABASE_DIRECTORY_PATH', default = '.')
+
+database_file_path = os.path.join(DATABASE_DIRECTORY_PATH, 'beacons.db.sqlite')
+print(f'Database file path: {database_file_path}')
+
 
 bot = commands.Bot(command_prefix=BOT_PREFIX)
 
@@ -30,7 +35,7 @@ async def new_beacon(ctx, password, *, description = ''):
     current_time = datetime.utcnow()
     expires_time = current_time + timedelta(hours = 1)
     
-    with SqliteDict('beacons.db.sqlite') as beacons:
+    with SqliteDict(database_file_path) as beacons:
         beacon_exists = beacon_id in beacons
 
         beacon_expired = False
@@ -60,7 +65,7 @@ async def new_beacon(ctx, password, *, description = ''):
 async def close_beacon(ctx, password):
     beacon_id = password
     
-    with SqliteDict('beacons.db.sqlite') as beacons:
+    with SqliteDict(database_file_path) as beacons:
         if beacon_id in beacons:
             beacon = beacons[beacon_id]
             if beacon['guild'] == ctx.guild.id:
@@ -77,7 +82,7 @@ async def list_all_beacons(ctx):
     active_beacons = []
     count = 0
     
-    with SqliteDict('beacons.db.sqlite') as beacons:
+    with SqliteDict(database_file_path) as beacons:
         for beacon_id in beacons:
             beacon = beacons[beacon_id]
             if beacon['guild'] == ctx.guild.id and current_time < beacon['expires']:
