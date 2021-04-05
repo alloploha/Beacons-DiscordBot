@@ -1,5 +1,6 @@
 import discord
 import os
+import sys
 
 from dotenv import load_dotenv
 from sqlitedict import SqliteDict
@@ -14,14 +15,14 @@ BOT_PREFIX = os.getenv('BOT_PREFIX')
 DATABASE_DIRECTORY_PATH = os.getenv('DATABASE_DIRECTORY_PATH', default = '.')
 
 database_file_path = os.path.join(DATABASE_DIRECTORY_PATH, 'beacons.db.sqlite')
-print(f'Database file path: {database_file_path}')
+print('Database file path: \"{0}\"'.format(database_file_path))
 
 
 bot = commands.Bot(command_prefix=BOT_PREFIX)
 
 @bot.event
 async def on_ready():
-    print(f'{bot.user.name} has connected to Discord!')
+    print('{0} has connected to Discord!\nPrefix: {1}\nSTDOUT: {2}'.format(bot.user.name, bot.command_prefix, sys.stdout.encoding))
 
 @bot.event
 async def on_message(message):
@@ -34,6 +35,8 @@ async def new_beacon(ctx, password, *, description = ''):
     beacon_id = password
     current_time = datetime.utcnow()
     expires_time = current_time + timedelta(hours = 1)
+
+    print(len(ctx.guild.text_channels))
     
     with SqliteDict(database_file_path) as beacons:
         beacon_exists = beacon_id in beacons
