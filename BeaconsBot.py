@@ -53,12 +53,11 @@ async def new_beacon(ctx, password, *, description = ''):
                 'description': description
                 }
             beacons.commit()
+            print(f'{ctx.author.name} lit a new beacon \"{password}\" at {ctx.guild.name}')
+            await ctx.send(f'{ctx.author.mention} зажёг новый маяк: \"{password}\"\n{description}')
         else:
             await ctx.send('Маяк с таким паролем уже существует.')
         beacons.close();
-
-        print(f'{ctx.author.name} lit a new beacon \"{password}\" at {ctx.guild.name}')
-        await ctx.send(f'{ctx.author.mention} зажёг новый маяк: \"{password}\"\n{description}')
 
 
 @bot.command('удалить', aliases=['putout', 'использован', 'затушить', 'потушить'], brief='Удаляет маяк из списка.', help='Если маяком воспользовался - будь другом, удали его из списка.')
