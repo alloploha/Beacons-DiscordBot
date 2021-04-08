@@ -10,6 +10,7 @@ from discord.ext import commands
 from datetime import datetime
 from datetime import timedelta
 from tabulate import tabulate
+from babel import Locale
 #from functools import cache - v.3.9
 
 load_dotenv()
@@ -22,7 +23,8 @@ print(f'Database file path: \"{database_file_path}\"')
 
 #@cache - v.3.9
 def translator(lang: str = 'en'):
-    trans = gettext.translation('messages', localedir='locale', languages=(lang,), fallback=True)
+    locale = Locale.parse(lang, sep='-')
+    trans = gettext.translation('messages', localedir='locale', languages=(locale.language,), fallback=True)
     return trans.gettext
 
 _en = translator('en')
