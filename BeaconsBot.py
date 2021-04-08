@@ -28,11 +28,14 @@ _en = translator('en')
 _ru = translator('ru')
 _ = _en # нужен для BABEL чтобы он мог создать .pot файл.
 
+
 bot = commands.Bot(command_prefix=BOT_PREFIX)
+
 
 @bot.event
 async def on_ready():
     print(f'{bot.user.name} has connected to Discord!\nPrefix: {bot.command_prefix}\nSTDOUT: {sys.stdout.encoding}')
+
 
 @bot.event
 async def on_message(message):
@@ -40,12 +43,14 @@ async def on_message(message):
         await message.channel.send(_('Веду список активных маяков. \nПрефикс для команд: **{0}**\nПопробуй команду: ```{0}help```').format(bot.command_prefix))
     await bot.process_commands(message)
 
+
 @bot.command(_('маяк'),
              aliases=[_ru('маяк')],
              brief=' | '.join((_('Добавляет маяк в список'), _ru('Добавляет маяк в список'))),
              help='\n'.join((_('Если построил и зажёг маяк - добавь его в список.'), _ru('Если построил и зажёг маяк - добавь его в список.')))
              )
 async def new_beacon(ctx, password, *, description = ''):
+    _ = translator(ctx.guild.preferred_locale)
     beacon_id = password
     current_time = datetime.utcnow()
     expires_time = current_time + timedelta(hours = 1)
@@ -82,6 +87,7 @@ async def new_beacon(ctx, password, *, description = ''):
              help='\n'.join((_('Если маяком воспользовался - будь другом, удали его из списка.'), _ru('Если маяком воспользовался - будь другом, удали его из списка.')))
              )
 async def close_beacon(ctx, password):
+    _ = translator(ctx.guild.preferred_locale)
     beacon_id = password
     
     with SqliteDict(database_file_path) as beacons:
@@ -102,6 +108,7 @@ async def close_beacon(ctx, password):
              help='\n'.join((_('Список обновляется каждую минуту. Неиспользованные маяки гаснут в игре через час, поэтому они автоматически удаляются из списка. Но всё равно, пожалуйста, удали маяк, если ты им воспользовался.'),_ru('Список обновляется каждую минуту. Неиспользованные маяки гаснут в игре через час, поэтому они автоматически удаляются из списка. Но всё равно, пожалуйста, удали маяк, если ты им воспользовался.')))
              )
 async def list_all_beacons(ctx):
+    _ = translator(ctx.guild.preferred_locale)
     current_time = datetime.utcnow()
     active_beacons = []
     count = 0
