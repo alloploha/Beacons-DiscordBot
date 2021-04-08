@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import discord
 import os
 import sys
@@ -9,7 +10,7 @@ from discord.ext import commands
 from datetime import datetime
 from datetime import timedelta
 from tabulate import tabulate
-from functools import cache
+#from functools import cache - v.3.9
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
@@ -19,7 +20,7 @@ DATABASE_DIRECTORY_PATH = os.getenv('DATABASE_DIRECTORY_PATH', default = '.')
 database_file_path = os.path.join(DATABASE_DIRECTORY_PATH, 'beacons.db.sqlite')
 print(f'Database file path: \"{database_file_path}\"')
 
-@cache
+#@cache - v.3.9
 def translator(lang: str = 'en'):
     trans = gettext.translation('messages', localedir='locale', languages=(lang,), fallback=True)
     return trans.gettext
