@@ -32,6 +32,6 @@ MO := $(PO:.po=.mo)
 translation: $(MO)
 
 output:
-	-robocopy . $(OUTPUT_DIR) *.py *.txt *.mo /XD $(OUTPUT_DIR) /XD .* /S
+	-robocopy . '$(OUTPUT_DIR)' *.py *.txt *.mo '/XD' '$(OUTPUT_DIR)' '/XD' .* '/S'
 
 .PHONY: all translation output
