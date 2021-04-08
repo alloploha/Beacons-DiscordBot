@@ -28,6 +28,7 @@ jobs:
       run: make all
       
     - name: Copy files for Web Job
+      continue-on-error: true
       run: robocopy ./out '.\_wwwroot\App_Data\jobs\continuous\Beacons-DiscordBot\' /S
       
     - name: Zip files in Build Staging
