@@ -6,7 +6,7 @@ POT := $(addprefix $(POT_DIR)/, messages.pot)
 
 all: translation output
 
-$(POT_DIR)/%.pot &: *.py
+$(POT) &: *.py
 	$(BABEL) extract . -o $@
 
 %.mo: %.po
