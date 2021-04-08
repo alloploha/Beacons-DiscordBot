@@ -1,5 +1,7 @@
 import discord
 import os
+import sys
+import gettext
 
 from dotenv import load_dotenv
 from sqlitedict import SqliteDict
@@ -7,6 +9,7 @@ from discord.ext import commands
 from datetime import datetime
 from datetime import timedelta
 from tabulate import tabulate
+from functools import cache
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
@@ -14,23 +17,40 @@ BOT_PREFIX = os.getenv('BOT_PREFIX')
 DATABASE_DIRECTORY_PATH = os.getenv('DATABASE_DIRECTORY_PATH', default = '.')
 
 database_file_path = os.path.join(DATABASE_DIRECTORY_PATH, 'beacons.db.sqlite')
-print(f'Database file path: {database_file_path}')
+print(f'Database file path: \"{database_file_path}\"')
+
+@cache
+def translator(lang: str = 'en'):
+    trans = gettext.translation('messages', localedir='locale', languages=(lang,), fallback=True)
+    return trans.gettext
+
+_en = translator('en')
+_ru = translator('ru')
+_ = _en # нужен для BABEL чтобы он мог создать .pot файл.
 
 
 bot = commands.Bot(command_prefix=BOT_PREFIX)
 
+
 @bot.event
 async def on_ready():
-    print(f'{bot.user.name} has connected to Discord!')
+    print(f'{bot.user.name} has connected to Discord!\nPrefix: {bot.command_prefix}\nSTDOUT: {sys.stdout.encoding}')
+
 
 @bot.event
 async def on_message(message):
     if bot.user.mentioned_in(message):
-        await message.channel.send(f'Веду список активных маяков. \nПрефикс для команд: **{bot.command_prefix}**\nПопробуй команду: ```{bot.command_prefix}help```')
+        await message.channel.send(_('Веду список активных маяков. \nПрефикс для команд: **{0}**\nПопробуй команду: ```{0}help```').format(bot.command_prefix))
     await bot.process_commands(message)
 
-@bot.command('маяк', aliases=['beacon', 'зажечь'], brief=f'Добавляет маяк в список.', help='Если построил и зажёг маяк - добавь его в список.')
+
+@bot.command(_('маяк'),
+             aliases=[_ru('маяк')],
+             brief=' | '.join((_('Добавляет маяк в список'), _ru('Добавляет маяк в список'))),
+             help='\n'.join((_('Если построил и зажёг маяк - добавь его в список.'), _ru('Если построил и зажёг маяк - добавь его в список.')))
+             )
 async def new_beacon(ctx, password, *, description = ''):
+    _ = translator(ctx.guild.preferred_locale)
     beacon_id = password
     current_time = datetime.utcnow()
     expires_time = current_time + timedelta(hours = 1)
@@ -54,14 +74,19 @@ async def new_beacon(ctx, password, *, description = ''):
                 }
             beacons.commit()
             print(f'{ctx.author.name} lit a new beacon \"{password}\" at {ctx.guild.name}')
-            await ctx.send(f'{ctx.author.mention} зажёг новый маяк: \"{password}\"\n{description}')
+            await ctx.send(_('{0} зажёг новый маяк: \"{1}\"\n{2}').format(ctx.author.mention, password, description))
         else:
-            await ctx.send('Маяк с таким паролем уже существует.')
+            await ctx.send(_('Маяк с таким паролем уже существует.'))
         beacons.close();
 
 
-@bot.command('удалить', aliases=['putout', 'использован', 'затушить', 'потушить'], brief='Удаляет маяк из списка.', help='Если маяком воспользовался - будь другом, удали его из списка.')
+@bot.command(_('потушен'),
+             aliases=[_ru('потушен')],
+             brief=' | '.join((_('Удаляет маяк из списка'), _ru('Удаляет маяк из списка'))),
+             help='\n'.join((_('Если маяком воспользовался - будь другом, удали его из списка.'), _ru('Если маяком воспользовался - будь другом, удали его из списка.')))
+             )
 async def close_beacon(ctx, password):
+    _ = translator(ctx.guild.preferred_locale)
     beacon_id = password
     
     with SqliteDict(database_file_path) as beacons:
@@ -73,10 +98,16 @@ async def close_beacon(ctx, password):
                 beacons.commit()
                 beacons.close();
                 print(f'{ctx.author.name} put out beacon \"{password}\"')
-                await ctx.send(f'<@{beacon_author_id}>, {ctx.author.name} использовал или затушил маяк \"{password}\"')
+                await ctx.send(_('<@{0}>, {1} использовал или затушил маяк \"{2}\"').format(beacon_author_id, ctx.author.name, password))
 
-@bot.command('маяки', aliases=['list'], brief='Выводит список всех зажженных маяков.', help='Список обновляется каждую минуту. Неиспользованные маяки гаснут в игре через час, поэтому они автоматически удаляются из списка. Но всё равно, пожалуйста, удали маяк, если ты им воспользовался.')
+
+@bot.command(_('маяки'),
+             aliases=[_ru('маяки')],
+             brief=' | '.join((_('Выводит список всех зажженных маяков'), _ru('Выводит список всех зажженных маяков'))),
+             help='\n'.join((_('Список обновляется каждую минуту. Неиспользованные маяки гаснут в игре через час, поэтому они автоматически удаляются из списка. Но всё равно, пожалуйста, удали маяк, если ты им воспользовался.'),_ru('Список обновляется каждую минуту. Неиспользованные маяки гаснут в игре через час, поэтому они автоматически удаляются из списка. Но всё равно, пожалуйста, удали маяк, если ты им воспользовался.')))
+             )
 async def list_all_beacons(ctx):
+    _ = translator(ctx.guild.preferred_locale)
     current_time = datetime.utcnow()
     active_beacons = []
     count = 0
@@ -91,8 +122,8 @@ async def list_all_beacons(ctx):
         beacons.close()
 
     if count <= 0:
-        await ctx.send(f'Активных маяков пока нет. Попробуйте позже.')
+        await ctx.send(_('Активных маяков пока нет. Попробуйте позже.'))
     else:
-        await ctx.send('Активные маяки:```' + tabulate(active_beacons, ['Пароль', 'Минуты', 'Описание']) + '```')
+        await ctx.send(_('Активные маяки:```{0}```').format(tabulate(active_beacons, [_('Пароль'), _('Минуты'), _('Описание')])))
 
 bot.run(DISCORD_TOKEN);
