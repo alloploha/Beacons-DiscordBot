@@ -32,6 +32,6 @@ MO := $(PO:.po=.mo)
 translation: $(MO)
 
 output:
-	-cmd.exe /C "robocopy . '$(OUTPUT_DIR)' *.py *.txt *.mo /XD '$(OUTPUT_DIR)' .* /S"
+	-cmd.exe /C "robocopy . $(OUTPUT_DIR) *.py *.txt *.mo /XD $(OUTPUT_DIR) .* /S"
 
 .PHONY: all translation output
